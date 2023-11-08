@@ -1,0 +1,414 @@
+---
+auth:
+  # A private key used for signing jwt tokens
+  # Easily generate one by running
+  # $ openssl genrsa -out jwt.pem 2048
+  jwtPrivateKey: |
+    -----BEGIN RSA PRIVATE KEY-----
+    YOUR-KEY-HERE
+    -----END RSA PRIVATE KEY-----
+
+  # The public key used for verifying the signature
+  # Generate one by running
+  # $ openssl rsa -in jwt.pem -pubout -out jwt.pub
+  jwtPublicKey: |
+    -----BEGIN PUBLIC KEY-----
+    YOUR-KEY-HERE
+    -----END PUBLIC KEY-----
+  jwtQueueServicePublicKey: |
+    -----BEGIN PUBLIC KEY-----
+    YOUR-KEY-HERE
+    -----END PUBLIC KEY-----
+
+  # A password used for encrypting session data.
+  # **Needs to be minimum 32 characters**
+  cookiePassword: WOW-ANOTHER-INSECURE-PASSWORD!!!
+
+  # A password used for encrypting stored pipeline secrets and user Oauth token.
+  # **Needs to be minimum 32 characters**
+  encryptionPassword: WOW-ANOTHER-MORE-INSECURE-PASSWORD!!!
+
+  # A password used for hashing user/pipeline access tokens.
+  # **Needs to be minimum 32 characters**
+  hashingPassword: WOW-ANOTHER-MORE-INSECURE-PASSWORD!!!
+
+  # A flag to set if the server is running over https.
+  # Used as a flag for the OAuth flow
+  https: false
+  # A flag to set if you want guests to browse your pipelines
+  allowGuestAccess: false
+  # Deprecated. Instead, use allowList which is more secure.
+  # List of users able to authenticate against the system
+  # if empty, it allows everyone
+  # Values should follow '{scmDisplayName:scmUsername}' format
+  # Ex: ['github:john', 'bitbucket:john']
+  whitelist: []
+
+  # list of users able to authenticate against the system
+  # if empty, it allows everyone
+  # Values should follow '{scmDisplayName:scmUsername:scmUserId}' format
+  # Ex: ['github:john:12345', 'bitbucket:john:{98fsa1ba-0b91-4e3c-95ee-55899e933b0}']
+  allowList: ['github:jimsmithkka']
+
+  # Deprecated. Instead, use sdAdmins which is more secure.
+  # List of users who should be given screwdriver admin privileges
+  # Values should follow '{scmDisplayName:scmUsername}' format
+  # Ex: ['github:john', 'bitbucket:john']
+  admins: ['github:jimsmithkka']
+
+  # List of users who should be given screwdriver admin privileges
+  # Values should follow '{scmDisplayName:scmUsername:scmUserId}' format
+  # Ex: ['github:john:12345', 'bitbucket:john:{98fsa1ba-0b91-4e3c-95ee-55899e933b0}']
+  sdAdmins: ['github:jimsmithkka']
+  # When set to true
+  #  - grant admin privileges to the users listed in 'sdAdmins'
+  #  - only authenticate the users listed in 'allowList'
+  # When set to false, performs
+  #  - grant admin privileges to the users listed in 'admins'
+  #  - only authenticate the users listed in 'whitelist'
+  authCheckById: true
+  # Default session timeout (in minutes)
+  sessionTimeout: 120
+  # SameSite Cookie Option
+  sameSite: Strict
+  # cookie path to access the cookie, set to '/'
+  path: /
+
+shutdown:
+  terminationGracePeriod: TERMINATION_GRACE_PERIOD
+
+httpd:
+  # Port to listen on
+  port: 80
+  # Host to listen on (set to localhost to only accept connections from this machine)
+  host: 0.0.0.0
+  # Externally routable URI (usually your load balancer or CNAME)
+  uri: http://localhost:80
+  # SSL Support
+  tls: false
+    # If you want SSL, you can easily add it by replacing `tls: false` with an object that
+    # provides the options required by `tls.createServer`
+    # https://nodejs.org/api/tls.html#tls_tls_createserver_options_secureconnectionlistener
+    # key: |
+    #   PRIVATE KEY HERE
+    # cert: |
+    #   YOUR CERT HERE
+
+datastore:
+  plugin: sequelize
+  ddlSyncEnabled: "true"
+  sequelize:
+    # Type of server to talk to
+    dialect: sqlite
+    # More arguments here:
+    # http://docs.sequelizejs.com/en/latest/api/sequelize/
+    ssl: false
+    pool: {}
+    retry: {}
+    buildMetricsEnabled: "false"
+    # readOnly datastore config
+    # readOnly: {}
+
+executor:
+  # Default executor
+  plugin: docker
+  k8s:
+    enabled: false
+    options:
+      kubernetes:
+        # The host or IP of the kubernetes cluster
+        host: kubernetes.default
+        # The jwt token used for authenticating kubernetes requests
+        # Loaded from /var/run/secrets/kubernetes.io/serviceaccount/token by default
+        # Resources for build pod
+        resources:
+          # Number of cpu cores
+          cpu:
+            micro: "0.5"
+            low: 2
+            high: 6
+          # Memory in GB
+          memory:
+            micro: 1
+            low: 2
+            high: 12
+        # Default build timeout for all builds in this cluster (in minutes)
+        buildTimeout: 90
+        # Default max build timeout (in minutes)
+        maxBuildTimeout: 120
+        # k8s node selectors for appropriate pod scheduling
+        nodeSelectors: {}
+        preferredNodeSelectors: {}
+        # support for kata-containers-as-a-runtimeclass
+        runtimeClass: ""
+    # Launcher image to use
+    launchImage: screwdrivercd/launcher
+    # Container tags to use
+    launchVersion: stable
+  docker:
+    enabled: true
+    options:
+      # Dockerode configuration https://github.com/apocas/dockerode#getting-started
+      docker: {}
+      # Container tags to use
+      launchVersion: stable
+  k8s-vm:
+    enabled: false
+    options:
+      # Configuration of Docker
+      kubernetes:
+        # The host or IP of the kubernetes cluster
+        host: kubernetes.default
+        # The jwt token used for authenticating kubernetes requests
+        # Loaded from /var/run/secrets/kubernetes.io/serviceaccount/token by default
+        # Resources for build pod
+        resources:
+          # Number of cpu cores
+          cpu:
+            micro: 1
+            low: 2
+            high: 6
+          # Memory in GB
+          memory:
+            micro: 1
+            low: 2
+            high: 12
+        # Default build timeout for all builds in this cluster (in minutes)
+        buildTimeout: 90
+        # Default max build timeout (in minutes)
+        maxBuildTimeout: 120
+        # k8s node selectors for appropriate pod scheduling
+        nodeSelectors: {}
+        preferredNodeSelectors: {}
+      # Launcher image to use
+      launchImage: screwdrivercd/launcher
+      # Launcher container tag to use
+      launchVersion: stable
+  queue:
+    enabled: false
+    options:
+      # redis or redisCluster(beta)
+      connectionType: redis
+      # Configuration of the redis instance containing resque
+      redisConnection:
+        host: "127.0.0.1"
+        port: 9999
+        options:
+          password: "THIS-IS-A-PASSWORD"
+          tls: false
+        database: 0
+      redisClusterConnection:
+        hosts: []
+        options:
+          password: a-secure-password
+          tls: false
+        slotsRefreshTimeout: 1000
+
+queueWebhook:
+  # Enabled events from webhook queue or not
+  enabled: false
+
+scms: {}
+  github:
+    plugin: github
+    config:
+      # The client id used for OAuth with github. Look up GitHub OAuth for details
+      # https://developer.github.com/v3/oauth/
+      oauthClientId: YOU-PROBABLY-WANT-SOMETHING-HERE
+      # The client secret used for OAuth with github
+      oauthClientSecret: AGAIN-SOMETHING-HERE-IS-USEFUL
+      # You can also configure for use with GitHub enterprise
+      # gheHost: github.screwdriver.cd
+      # The username and email used for checkout with github
+      username: sd-buildbot
+      email: dev-null@screwdriver.cd
+      # Token for writing PR comments in Github, needs public_repo scope
+      commentUserToken: A-BOT-GITHUB-PERSONAL-ACCESS-TOKEN
+      # Secret to add to GitHub webhooks so that we can validate them
+      secret: SUPER-SECRET-SIGNING-THING
+      # Whether it supports private repo: boolean value.
+      # If true, it will ask for read and write access to public and private repos
+      # https://developer.github.com/v3/oauth/#scopes
+      privateRepo: false
+#   bitbucket:
+#     plugin: bitbucket
+#     config:
+#       oauthClientId: YOUR-BITBUCKET-OAUTH-CLIENT-ID
+#       oauthClientSecret: YOUR-BITBUCKET-OAUTH-CLIENT-SECRET
+#       # The username and email used for checkout with bitbucket
+#       username: sd-buildbot
+#       email: dev-null@screwdriver.cd
+#   gitlab:
+#     plugin: gitlab
+#     config:
+#       oauthClientId: YOUR-GITLAB-OAUTH-CLIENT-ID
+#       oauthClientSecret: YOUR-GITLAB-OAUTH-CLIENT-SECRET
+#       # If you have on-premise gitlab, you can specify that here
+#       # gitlabHost: mygitlab.com
+#       # gitlabProtocol: https
+#       # The username and email used for checkout with gitlab
+#       username: sd-buildbot
+#       # email: dev-null@screwdriver.cd
+#       # read-only scm config, default false
+#       readOnly:
+#         # set true to enable read-only scm mode
+#         enabled: false
+#         # headless username
+#         username: headless-user
+#         # headless access token
+#         accessToken: headlesstoken
+#         # SCM clone type (https or ssh)
+#         cloneType: https
+webhooks:
+  # Obtains the SCM token for a given user. If a user does not have a valid SCM token registered with Screwdriver, it will use this user's token instead.
+  username: sd-buildbot
+  # Ignore commits made by these users
+  ignoreCommitsBy: []
+  # Restrict PR: all, none, branch, or fork
+  restrictPR: none
+  # Chain PR: true or false
+  chainPR: false
+  # Upper limit on incoming uploads to builds
+  maxBytes: 1048576 # 1MB
+
+coverage:
+  default: true
+  # plugin: sonar
+  # sonar:
+  #   sdApiUrl: https://api.screwdriver.cd
+  #   sonarHost: https://sonar.screwdriver.cd
+  #   adminToken: your-sonar-admin-token
+  #   sdUiUrl: https://cd.screwdriver.cd
+  #   sonarEnterprise: false
+  #   sonarGitAppName: "Screwdriver Sonar PR Checks"
+
+multiBuildCluster:
+  # Enabled multi build cluster feature or not
+  enabled: false
+
+unzipArtifacts:
+  # Enabled unzip artifacts feature or not
+  enabled: false
+
+bookends:
+  # Plugins for build setup
+  default:
+    setup:
+      - scm
+      - screwdriver-cache-bookend
+    teardown:
+      - screwdriver-artifact-bookend
+      - screwdriver-cache-bookend
+
+notifications:
+  options:
+    # Throw error when validation fails (default true); otherwise show warning
+    throwValidationErr: true
+  # # Email notification when a build finishes
+  # email:
+  #   host: email-host
+  #   port: email-port
+  #   from: email-address-to-send-from
+  #   username: optional-username
+  #   password: optional-password
+  # # Slack notification when build finishes
+  # slack:
+  #   # default workspace key
+  #   defaultWorkspace: workspace1
+  #   # Objects with slack token
+  #   workspaces:
+  #     # These keys are used in notification setting on screwdriver.yaml
+  #     # ex)
+  #     #  settings:
+  #     #    slack:
+  #     #      channels:
+  #     #        - test-channel-1
+  #     #        - workspace1:test-channel-2
+  #     #        - workspace2:test-channel-1
+  #     workspace1:
+  #       token: your-slack-bot-token1
+  #     workspace2:
+  #       token: your-slack-bot-token2
+ecosystem:
+  # Externally routable URL for the User Interface
+  ui: https://192.168.1.18
+  # Externally routable URL for the Artifact Store
+  store: https://192.168.1.19
+  # Externally routable URL for the Queue Service
+  queue: https://queue.screwdriver.cd
+  # Badge service (needs to add a status and color)
+  badges: https://img.shields.io/badge/{{subject}}-{{status}}-{{color}}.svg
+  # Default registry to pull build containers from. Uses Docker Hub if nothing/empty string is provided
+  dockerRegistry: ""
+  # Extra origins allowed to do CORS to API
+  allowCors: []
+  # build cache strategies: s3, disk, with s3 as default option to store cache
+  cache:
+    strategy: "s3"
+    path: "/"
+    compress: false
+    md5check: false
+    max_size_mb: 0
+    max_go_threads: 10000
+
+# environment release information
+release:
+    mode: stable
+    cookieName: release
+    cookieValue: stable
+    cookieTimeout: 2 # in minutes
+    headerName: release
+    headerValue: stable
+
+# Logging preferences
+log:
+  audit:
+    # set true to enable audit logs for all API calls
+    enabled: false
+    # add target scope tokens(pipeline, build, temporal, admin, guest, user)
+    scope: []
+
+# default cluster environment variables to inject into builds
+build:
+  environment:
+    SD_VERSION: 4
+
+rateLimit:
+  # set true to enable rate limiting on auth token
+  enabled: false
+  # max request limit on auth token per duration, default: 300 (1 rps)
+  limit: 300
+  # limit duration in milliseconds, default: 300000 (5 mins)
+  duration: 300000
+
+redisLock:
+  # set true to enable redis lock
+  enabled: false
+  options:
+    # maximum retry limit to obtain lock
+    retryCount: 200
+    # the expected clock drift
+    driftFactor: 0.01
+    # the time in milliseconds between retry attempts
+    retryDelay: 500
+    # the maximum time in milliseconds randomly added to retries
+    retryJitter: 200
+    # the maximum time in milliseconds living of a key that has a timeout
+    ttl: 20000
+    # redis or redisCluster(beta)
+    connectionType: redis
+    # Configuration of the redis instance
+    redisConnection:
+      host: "127.0.0.1"
+      port: 9999
+      options:
+        password: "THIS-IS-A-PASSWORD"
+        tls: false
+      database: 0
+    redisClusterConnection:
+      hosts: []
+      options:
+        password: "THIS-IS-A-PASSWORD"
+        tls: false
+      slotsRefreshTimeout: 1000
+
