@@ -189,6 +189,8 @@ describe('pipeline plugin test', () => {
     let bannerMock;
     let screwdriverAdminDetailsMock;
     let scmMock;
+    let pipelineTemplateFactoryMock;
+    let pipelineTemplateVersionFactoryMock;
     let plugin;
     let server;
     const password = 'this_is_a_password_that_needs_to_be_atleast_32_characters';
@@ -263,6 +265,12 @@ describe('pipeline plugin test', () => {
             }
         };
         screwdriverAdminDetailsMock = sinon.stub();
+        pipelineTemplateFactoryMock = {
+            get: sinon.stub()
+        };
+        pipelineTemplateVersionFactoryMock = {
+            create: sinon.stub()
+        };
 
         /* eslint-disable global-require */
         plugin = require('../../plugins/pipelines');
@@ -281,6 +289,8 @@ describe('pipeline plugin test', () => {
             tokenFactory: tokenFactoryMock,
             bannerFactory: bannerFactoryMock,
             secretFactory: secretFactoryMock,
+            pipelineTemplateFactory: pipelineTemplateFactoryMock,
+            pipelineTemplateVersionFactory: pipelineTemplateVersionFactoryMock,
             ecosystem: {
                 badges: '{{subject}}/{{status}}/{{color}}'
             }
@@ -982,15 +992,12 @@ describe('pipeline plugin test', () => {
         let options;
         let pipelineMock;
         let stagesMocks;
-        let events;
 
         beforeEach(() => {
             options = {
                 method: 'GET',
                 url: `/pipelines/${id}/stages`
             };
-            events = getEventsMocks(testEvents);
-            eventFactoryMock.list.resolves(events);
             pipelineMock = getPipelineMocks(testPipeline);
             stagesMocks = getStagesMocks(testStages);
             stageFactoryMock.list.resolves(stagesMocks);
@@ -1002,18 +1009,7 @@ describe('pipeline plugin test', () => {
                 assert.equal(reply.statusCode, 200);
                 assert.calledWith(stageFactoryMock.list, {
                     params: {
-                        pipelineId: id,
-                        eventId: 12345
-                    }
-                });
-                assert.calledWith(eventFactoryMock.list, {
-                    params: {
-                        pipelineId: id,
-                        parentEventId: null,
-                        type: 'pipeline'
-                    },
-                    paginate: {
-                        count: 1
+                        pipelineId: id
                     }
                 });
                 assert.deepEqual(reply.result, testStages);
@@ -1034,25 +1030,6 @@ describe('pipeline plugin test', () => {
 
             return server.inject(options).then(reply => {
                 assert.equal(reply.statusCode, 404);
-            });
-        });
-
-        it('returns 404 for getting the latest commit event that does not exist', () => {
-            eventFactoryMock.list.resolves([]);
-
-            return server.inject(options).then(reply => {
-                assert.equal(reply.statusCode, 404);
-                assert.calledWith(eventFactoryMock.list, {
-                    params: {
-                        pipelineId: id,
-                        parentEventId: null,
-                        type: 'pipeline'
-                    },
-                    paginate: {
-                        count: 1
-                    }
-                });
-                assert.notCalled(stageFactoryMock.list);
             });
         });
 

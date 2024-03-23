@@ -147,7 +147,20 @@ module.exports = () => ({
             }
 
             if (badges) {
-                oldPipeline.badges = { ...oldPipeline.badges, ...badges };
+                if (!oldPipeline.badges) {
+                    oldPipeline.badges = badges;
+                } else {
+                    const newBadges = {};
+
+                    Object.keys(oldPipeline.badges).forEach(badgeKey => {
+                        newBadges[badgeKey] = {
+                            ...oldPipeline.badges[badgeKey],
+                            ...badges[badgeKey]
+                        };
+                    });
+
+                    oldPipeline.badges = newBadges;
+                }
             }
 
             // update pipeline
